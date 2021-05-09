@@ -1,0 +1,191 @@
+<html>
+
+<head>
+    <title>Enter Question</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+        integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/styles.css')}}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div id="data">
+        <div id="mainnav">
+            <nav class="navbar">
+                <div class="container-fluid">
+                    <h3><i class="fas fa-book-open"></i> VScribe Exam Manager</h3>
+                </div>
+            </nav>
+        </div>
+        {% for message in get_flashed_messages() %}
+        <div class="alert-error"><i class="fas fa-exclamation-triangle"></i> Error: {{ message }}</div>
+        {% endfor %}
+        <div class="mainqp" id="qsnpaper">
+            {% if(data==NULL or data==[]) %}
+            <h2 style="float: left; margin-left: 5%;">No questions have been added yet</h2>
+            {% else %}
+            <div style="float: left; width: 45%;">
+                <div id="finalppr">
+                    {% for item in data %}
+                    <h5>Question No. {{loop.index}}</h5>
+
+                    <h5 style="display: inline;">{{ item.type }} </h5>
+                    <h4 style="display: inline;">{{ item.question }}</h4>
+                    {% if(item.type=="MCQ") %}
+                    <h5>A. {{ item.optA }}</h5>
+                    <h5>B. {{ item.optB }}</h5>
+                    <h5>C. {{ item.optC }}</h5>
+                    {% endif %}
+                    <h5>{{ item.marks }}</h5><br>
+                    <form action="/edit" method="post">
+                        <input type="hidden" value="{{ item._id }}" name="edid">
+                        <button class="btn btn-warning" type="submit" value="submit">Edit</button>
+                    </form>
+                    <form action="/delete" method="post">
+                        <input type="hidden" value="{{ item._id }}" name="delid">
+                        <button class="btn btn-danger" type="submit" value="submit">Delete</button>
+                    </form>
+                    <br><br>
+                    {% endfor %}
+                </div>
+                <form id="final" style="float:left;" method="POST" action="/finalize">
+                    <label class="form-label">Subject</label>
+                    <input type="text" class="form-control" name="subj" autocomplete="off">
+                    <label class="form-label">Total Time</label>
+                    <input type="number" min="30" max="180" step="10" class="form-control" name="ttime"
+                        autocomplete="off">
+                    <button type="submit" class="btn btn-primary" style="float: right; margin-top: 5px;"
+                        value="submit">Finalize the paper</button>
+                </form>
+            </div>
+            {% endif %}
+            <div>
+                {% if(ch==1) %}
+                <form id="qsn" action="/saveedit" method="post">
+                    <div class="eachqsn">
+                        <center>
+                            <h4
+                                style="background-color: cornflowerblue; color: white; border-radius: 2%; width: 60%; padding: 3px;">
+                                <i class="fas fa-pen"></i> Edit question
+                            </h4>
+                        </center><br>
+                        <div>
+                            <input type="hidden" name="qsnid" value="{{x._id}}">
+                            <div class="mb-3">
+                                <label for="exampleInputEmail1" class="form-label">Q. Choose the type of
+                                    question</label>
+                                <select class="form-select" id="options" aria-label="Default select example"
+                                    name="qtype" onchange="checkMCQ()">
+                                    <option value="{{x.type}}">Make a selection</option>
+                                    <option {% if x.type=="Long" %} selected="selected" {% endif %} value="Long">Long
+                                        Answer</option>
+                                    <option {% if x.type=="Short" %} selected="selected" {% endif %} value="Short">Short
+                                        Answer</option>
+                                    <option {% if x.type=="MCQ" %} selected="selected" {% endif %} value="MCQ">Multiple
+                                        Choice</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Enter the question</label>
+                                <textarea rows="4" cols="50" class="form-control" name="qstat" value="{{x.question}}"
+                                    autocomplete="off">{{x.question}}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Total marks alloted for the question</label>
+                                <input type="number" min="1" max="100" class="form-control" name="qmarks"
+                                    autocomplete="off" value="{{x.marks}}">
+                            </div>
+                            <div class="mb-3" id="opts">
+                                <label class="form-label">Option A</label>
+                                <input type="text" class="form-control" name="oa" value="{{x.optA}}" autocomplete="off">
+                                <label class="form-label">Option B</label>
+                                <input type="text" class="form-control" name="ob" value="{{x.optB}}" autocomplete="off">
+                                <label class="form-label">Option C</label>
+                                <input type="text" class="form-control" name="oc" value="{{x.optC}}" autocomplete="off">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="float: right;" value="submit"><i
+                                class="fas fa-save"></i>
+                            Save</button>
+                    </div>
+                </form>
+                {% endif %}
+                {% if(ch!=1) %}
+                <form id="qsn" action="/saveqsn" method="post">
+                    <div class="eachqsn">
+                        <center>
+                            <h4
+                                style="background-color: cornflowerblue; color: white; border-radius: 2%; width: 60%; padding: 3px;">
+                                <i class="fas fa-pen"></i> Add new question
+                            </h4>
+                        </center><br>
+                        <div>
+                            <div class="mb-3">
+                                <label for="exampleInputEmail1" class="form-label">Q. Choose the type of
+                                    question</label>
+                                <select class="form-select" id="options" aria-label="Default select example"
+                                    name="qtype" onchange="checkMCQ()">
+                                    <option selected value="none">Make a selection</option>
+                                    <option value="Long">Long Answer</option>
+                                    <option value="Short">Short Answer</option>
+                                    <option value="MCQ">Multiple Choice</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Enter the question</label>
+                                <textarea rows="4" cols="50" class="form-control" name="qstat"
+                                    autocomplete="off"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Total marks alloted for the question</label>
+                                <input type="number" min="1" max="100" class="form-control" name="qmarks"
+                                    autocomplete="off">
+                            </div>
+                            <div class="mb-3" id="opts">
+                                <label class="form-label">Option A</label>
+                                <input type="text" class="form-control" name="oa" autocomplete="off">
+                                <label class="form-label">Option B</label>
+                                <input type="text" class="form-control" name="ob" autocomplete="off">
+                                <label class="form-label">Option C</label>
+                                <input type="text" class="form-control" name="oc" autocomplete="off">
+                            </div>
+                        </div>
+                        <!-- <button type="submit" class="btn btn-danger" style="float: left;"><i class="fas fa-trash-alt"></i>
+                            Delete</button> -->
+                        <button type="submit" class="btn btn-success" style="float: right;" value="submit"><i
+                                class="fas fa-save"></i>
+                            Save</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        <!-- <center><button class="btn btn-success" id="addbtn" type="button" onclick="addQsn()"><i class="fas fa-plus"></i>
+                Add</button></center> -->
+    </div>
+    <script>
+        var ch;
+        ch = document.getElementById("options").value
+        console.log("Value ", ch)
+        if (ch !== "MCQ") {
+            document.getElementById("opts").style.display = "none"
+        }
+        else {
+            document.getElementById("opts").style.display = "block"
+        }
+        function checkMCQ() {
+            ch = document.getElementById("options").value
+            console.log("Value ", ch)
+            if (ch !== "MCQ") {
+                document.getElementById("opts").style.display = "none"
+            }
+            else {
+                document.getElementById("opts").style.display = "block"
+            }
+        }
+    </script>
+</body>
+
+</html>
